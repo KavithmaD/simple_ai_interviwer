@@ -1,0 +1,20 @@
+{
+    "version": 2,
+    "builds": [
+      {
+        "src": "gemini.py",
+        "use": "@vercel/python"
+      }
+    ],
+    "routes": [
+      {
+        "src": "/(.*)",
+        "dest": "/gemini.py"
+      }
+    ],
+    "env": {
+    "APP_MODULE": "main:app"
+  }
+
+  }
+  
