@@ -13,13 +13,11 @@ load_dotenv()
 
 # Use the API key from the environment variable
 genai.configure(api_key=os.getenv("GENAI_API_KEY"))
-# genai.configure(api_key="AIzaSyC6u4sUkIGM0Q-D58LMJROJnwMRmSPy_Vc")
 
 app = FastAPI()
 
 
 # MongoDB connection
-# MONGO_URL = "mongodb+srv://testing:Testing123@cluster0.koga8.mongodb.net/"
 MONGO_URL = os.getenv("MONGO_URL")
 client = AsyncIOMotorClient(MONGO_URL)
 db = client["ai_hiring"]  # Database name
