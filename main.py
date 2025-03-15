@@ -16,10 +16,7 @@ genai.configure(api_key=os.getenv("GENAI_API_KEY"))
 
 MONGO_URL = os.getenv("MONGO_URL")
 
-
-app = FastAPI(lifespan=lifespan)
-
-# app = FastAPI()
+app = FastAPI()
 
 @app.on_event("startup")
 async def startup_db_client():
