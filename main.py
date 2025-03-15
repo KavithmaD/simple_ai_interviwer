@@ -1,4 +1,4 @@
-from fastapi import FastAPI, UploadFile, File, Form, HTTPException
+from fastapi import FastAPI, UploadFile, File, Form, HTTPException, Request
 import fitz 
 from motor.motor_asyncio import AsyncIOMotorClient
 import google.generativeai as genai
@@ -7,7 +7,6 @@ import json
 import random
 from dotenv import load_dotenv
 import os
-from contextlib import asynccontextmanager
 
 # Load environment variables from .env file
 load_dotenv()
@@ -17,19 +16,19 @@ genai.configure(api_key=os.getenv("GENAI_API_KEY"))
 
 MONGO_URL = os.getenv("MONGO_URL")
 
-# Use FastAPI lifespan to manage MongoDB connections
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    app.mongodb_client = AsyncIOMotorClient(MONGO_URL)
-    app.db = app.mongodb_client["ai_hiring"]
-    # app.db["resumes"] = app.db["resumes"]
-    yield
-    app.mongodb_client.close()
 
 app = FastAPI(lifespan=lifespan)
 
 # app = FastAPI()
 
+@app.on_event("startup")
+async def startup_db_client():
+    app.mongodb_client = AsyncIOMotorClient(MONGO_URL)
+    app.db = app.mongodb_client["ai_hiring"]
+
+@app.on_event("shutdown")
+async def shutdown_db_client():
+    app.mongodb_client.close()
 
 # # MongoDB connection
 # MONGO_URL = os.getenv("MONGO_URL")
@@ -65,13 +64,14 @@ async def upload_resume(file: UploadFile = File(...)):
         return {"error": str(e)}
 
 @app.get("/get-resume/{resume_id}")
-async def get_resume(resume_id: str):
+async def get_resume(request: Request, esume_id: str):
     """
     Retrieve a resume from MongoDB by its ID.
     """
     try:
+        db = request.app.db 
         obj_id = ObjectId(resume_id) 
-        resume = await app.db["resumes"].find_one({"_id": obj_id})
+        resume = await db["resumes"].find_one({"_id": obj_id})
         if not resume:
             return {"error": "Resume not found"}
         
