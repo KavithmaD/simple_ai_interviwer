@@ -7,6 +7,7 @@ import json
 import random
 from dotenv import load_dotenv
 import os
+from contextlib import asynccontextmanager
 
 # Load environment variables from .env file
 load_dotenv()
@@ -14,20 +15,32 @@ load_dotenv()
 # Use the API key from the environment variable
 genai.configure(api_key=os.getenv("GENAI_API_KEY"))
 
-app = FastAPI()
-
-
-# MongoDB connection
 MONGO_URL = os.getenv("MONGO_URL")
-client = AsyncIOMotorClient(MONGO_URL)
-db = client["ai_hiring"]  # Database name
-resumes_collection = db["resumes"]  # Collection for storing resumes
 
+# Use FastAPI lifespan to manage MongoDB connections
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    app.mongodb_client = AsyncIOMotorClient(MONGO_URL)
+    app.db = app.mongodb_client["ai_hiring"]
+    # app.db["resumes"] = app.db["resumes"]
+    yield
+    app.mongodb_client.close()
+
+app = FastAPI(lifespan=lifespan)
+
+# app = FastAPI()
+
+
+# # MongoDB connection
+# MONGO_URL = os.getenv("MONGO_URL")
+# client = AsyncIOMotorClient(MONGO_URL)
+# db = client["ai_hiring"]  # Database name
+# app.db["resumes"] = db["resumes"]  # Collection for storing resumes
 
 @app.get("/")
 def home():
-    return {"message": "AI Hiring Platform Backend is Running!"}
-
+   return {"message": "AI Hiring Platform Backend is Running!"}
+  
 @app.post("/upload-resume/")
 async def upload_resume(file: UploadFile = File(...)):
     """
@@ -45,7 +58,7 @@ async def upload_resume(file: UploadFile = File(...)):
         }
 
         # Insert into MongoDB
-        result = await resumes_collection.insert_one(resume_data)
+        result = await app.db["resumes"].insert_one(resume_data)
         return {"message": "Resume stored successfully", "id": str(result.inserted_id)}
 
     except Exception as e:
@@ -58,7 +71,7 @@ async def get_resume(resume_id: str):
     """
     try:
         obj_id = ObjectId(resume_id) 
-        resume = await resumes_collection.find_one({"_id": obj_id})
+        resume = await app.db["resumes"].find_one({"_id": obj_id})
         if not resume:
             return {"error": "Resume not found"}
         
@@ -111,7 +124,7 @@ async def extract_info(resume_id: str):
     """
     try:
         obj_id = ObjectId(resume_id)
-        resume = await resumes_collection.find_one({"_id": obj_id})
+        resume = await app.db["resumes"].find_one({"_id": obj_id})
         if not resume:
             return {"error": "Resume not found"}
 
@@ -199,7 +212,7 @@ async def generate_resume_mcqs(resume_id: str):
    
 
     obj_id = ObjectId(resume_id)
-    resume = await resumes_collection.find_one({"_id": obj_id})
+    resume = await app.db["resumes"].find_one({"_id": obj_id})
 
     if not resume:
         return {"error": "Resume not found"}
@@ -266,7 +279,7 @@ async def interview(resume_id: str, candidate_response: str = None):
     Conducts an AI interview based on the candidate's resume.
     """
     obj_id = ObjectId(resume_id)
-    resume = await resumes_collection.find_one({"_id": obj_id})
+    resume = await app.db["resumes"].find_one({"_id": obj_id})
 
     if not resume:
         raise HTTPException(status_code=404, detail="Resume not found")
@@ -285,3 +298,5 @@ async def interview(resume_id: str, candidate_response: str = None):
     # Generate next question
     question = await generate_question(projects, experience, name, candidate_response)
     return question
+
+
