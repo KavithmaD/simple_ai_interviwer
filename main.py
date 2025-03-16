@@ -1,4 +1,4 @@
-from fastapi import FastAPI, UploadFile, File, Form, HTTPException, Request
+from fastapi import FastAPI, UploadFile, File, HTTPException
 import fitz 
 from motor.motor_asyncio import AsyncIOMotorClient
 import google.generativeai as genai
@@ -47,14 +47,14 @@ async def upload_resume(file: UploadFile = File(...)):
         return {"error": str(e)}
 
 @app.get("/get-resume/{resume_id}")
-async def get_resume(request: Request, esume_id: str):
+async def get_resume(resume_id: str):
     """
     Retrieve a resume from MongoDB by its ID.
     """
     try:
-        db = request.app.db 
+        
         obj_id = ObjectId(resume_id) 
-        resume = await db["resumes"].find_one({"_id": obj_id})
+        resume = await resume_collection.find_one({"_id": obj_id})
         if not resume:
             return {"error": "Resume not found"}
         
