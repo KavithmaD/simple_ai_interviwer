@@ -15,7 +15,7 @@ app = FastAPI()
 genai.configure(api_key=os.getenv("GENAI_API_KEY"))
 
 MONGO_URL = os.getenv("MONGO_URL")
-client = motor.motor_asyncio.AsyncIOMotorClient(os.environ["MONGO_URL"])
+client = AsyncIOMotorClient(MONGO_URL)
 db = client["ai_hiring"]
 resume_collection = db.get_collection("resumes")
 
