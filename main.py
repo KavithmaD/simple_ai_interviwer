@@ -188,15 +188,15 @@ async def generate_mcqs(skills):
     
     
     
-@app.get("/generate-mcqs/{resume_id}")
-async def generate_resume_mcqs(resume_id: str):
+@app.get("/generate-mcqs/{fid}")
+async def generate_resume_mcqs(fid: str):
     """
     Fetch skills from MongoDB and generate MCQs.
     """
    
 
-    obj_id = ObjectId(resume_id)
-    resume = await resume_collection.find_one({"_id": obj_id})
+    # obj_id = ObjectId(resume_id)
+    resume = await resume_collection.find_one({"fid": fid})
 
     if not resume:
         return {"error": "Resume not found"}
@@ -257,13 +257,13 @@ async def generate_question(projects, experience, name, candidate_response=None)
     
     
 
-@app.post("/interview/{resume_id}")
-async def interview(resume_id: str, candidate_response: str = None):
+@app.post("/interview/{fid}")
+async def interview(fid: str, candidate_response: str = None):
     """
     Conducts an AI interview based on the candidate's resume.
     """
-    obj_id = ObjectId(resume_id)
-    resume = await resume_collection.find_one({"_id": obj_id})
+   
+    resume = await resume_collection.find_one({"fid": fid})
 
     if not resume:
         raise HTTPException(status_code=404, detail="Resume not found")
