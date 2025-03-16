@@ -8,11 +8,7 @@ import random
 from dotenv import load_dotenv
 import os
 
-# Load environment variables from .env file
 load_dotenv()
-
-# Use the API key from the environment variable
-
 
 app = FastAPI()
 
@@ -22,21 +18,6 @@ MONGO_URL = os.getenv("MONGO_URL")
 client = motor.motor_asyncio.AsyncIOMotorClient(os.environ["MONGO_URL"])
 db = client["ai_hiring"]
 resume_collection = db.get_collection("resumes")
-
-# @app.on_event("startup")
-# async def startup_db_client():
-#     app.mongodb_client = AsyncIOMotorClient(MONGO_URL)
-#     app.db = app.mongodb_client["ai_hiring"]
-
-# @app.on_event("shutdown")
-# async def shutdown_db_client():
-#     app.mongodb_client.close()
-
-# # # MongoDB connection
-# # MONGO_URL = os.getenv("MONGO_URL")
-# # client = AsyncIOMotorClient(MONGO_URL)
-# # db = client["ai_hiring"]  # Database name
-# # resume_collection = db["resumes"]  # Collection for storing resumes
 
 @app.get("/")
 def home():
