@@ -282,4 +282,17 @@ async def interview(resume_id: str, candidate_response: str = None):
     question = await generate_question(projects, experience, name, candidate_response)
     return question
 
+@app.get("/get-all-resumes")
+async def get_all_resumes():
+    """
+    Retrieve all resumes from MongoDB.
+    """
+    try:
+        resumes = await resume_collection.find().to_list(None)  # Convert cursor to list
+        for resume in resumes:
+            resume["_id"] = str(resume["_id"])  # Convert ObjectId to string
+        
+        return {"resumes": resumes}
 
+    except Exception as e:
+        return {"error": str(e)}
