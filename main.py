@@ -1,4 +1,5 @@
 from fastapi import FastAPI, UploadFile, File, HTTPException, Form
+from fastapi.middleware.cors import CORSMiddleware
 import fitz 
 from motor.motor_asyncio import AsyncIOMotorClient
 import google.generativeai as genai
@@ -18,6 +19,23 @@ MONGO_URL = os.getenv("MONGO_URL")
 client = AsyncIOMotorClient(MONGO_URL)
 db = client["ai_hiring"]
 resume_collection = db.get_collection("resumes")
+
+
+# Allow requests from your frontend
+origins = [
+    "http://localhost:3001",  # Add your React app's origin
+    "http://localhost:3000",  # If using another port
+    "https://your-frontend-domain.com",  # Add production frontend URL
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,  # Allows only specified origins
+    allow_credentials=True,
+    allow_methods=["*"],  # Allows all methods (GET, POST, etc.)
+    allow_headers=["*"],  # Allows all headers
+)
+
 
 @app.get("/")
 def home():
